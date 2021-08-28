@@ -2,86 +2,66 @@ import cv2
 import numpy as np
 from PIL import Image
 from scipy.ndimage import interpolation as inter
-
+import matplotlib.pyplot as plt
 
 class PreProcessing:
-    def __init__(self):
-        pass
+    def __init__(self, image, config):
+        self.img = image
+        self.original_width, self.original_height = self.img.shape[:2]
+        self.config = config
+        print("original width x height of image is {width} x {height}".format(width=self.original_width,
+                                                                              height=self.original_height))
     @staticmethod
-    def imageResize(img):
+    def image_resize(image, params=None):
         """
         Scaling of image 300 DPI
 
         :return:
         """
-        img_resized = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)  # Inter Cubic
+        params = {} if params is None else params
+
+        img_resized = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)  # Inter Cubic
         return img_resized
 
     @staticmethod
-    def bgrtogrey(img):
+    def bgr_to_grey(image, params=None):
         """
         BGR to GRAY
 
         :return:
         """
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        params = {} if params is None else params
+        img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         return img
 
     @staticmethod
-    def checkDayOrNight(img, thrshld):
-        """
-        Increase Brightness
+    def threshold(image, params=None):
+        params = {} if params is None else params
 
-        :param thrshld:
-        :return:
-        """
-        is_light = np.mean(img) > thrshld
-        return 0 if is_light else 1  # 0 --> light and 1 -->dark
-
-    @staticmethod
-    def increaseBrightness(img):
-        alpha = 1
-        beta = 40
-        img = cv2.addWeighted(img, alpha, np.zeros(img.shape, img.dtype), 0, beta)
-        return img
-
-    @staticmethod
-    def handle_brightness(img, threshold):
-        """
-        if dark increase brightness
-        :param img:
-        :param threshold:
-        :return:
-        """
-
-        if PreProcessing.checkDayOrNight(img, threshold) == 1:
-            return PreProcessing.increaseBrightness(img)  # increase brightness
-
-    @staticmethod
-    def threshold(img):
         # Various thresholding method
-        # img = cv2.threshold(cv2.bilateralFilter(img, 5, 75, 75), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-        # img = cv2.threshold(cv2.medianBlur(img, 3), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        img = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        # img = cv2.threshold(cv2.bilateralFilter(image, 5, 75, 75), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        # img = cv2.threshold(cv2.medianBlur(image, 3), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
         # img = cv2.adaptiveThreshold(cv2.GaussianBlur(img, (5, 5), 0), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         #                             cv2.THRESH_BINARY, 31, 2)
-        img = cv2.adaptiveThreshold(cv2.bilateralFilter(img, 9, 75, 75), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                    cv2.THRESH_BINARY, 31, 2)
+        # img = cv2.adaptiveThreshold(cv2.bilateralFilter(img, 9, 75, 75), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        #                             cv2.THRESH_BINARY, 31, 2)
         # img = cv2.adaptiveThreshold(cv2.medianBlur(img, 3), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31,
         #                             2)
+        # img = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
         return img
 
     @staticmethod
-    def noise_removal(img):
+    def noise_removal(image, params=None):
         """
         Noise reduction
 
         :param img:
         :return:
         """
-        kernel = np.ones((1, 1), np.uint8)
-        img = cv2.dilate(img, kernel, iterations=1)
-        img = cv2.erode(img, kernel, iterations=1)
-        return img
+        params = {} if params is None else params
+        img_clean = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 15)
+        return img_clean
 
     @staticmethod
     def determine_score(arr, angle):
@@ -91,26 +71,26 @@ class PreProcessing:
         return histogram, score
 
     @staticmethod
-    def correct_skew(image, delta=1, limit=5):
+    def correct_skew(image, params=None):
         """
 
         :param delta:
         :param limit:
         :return:
         """
-
-        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        thresh = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+        params = {} if params is None else params
+        limit = params.get('limit')
+        delta = params.get('delta')
 
         scores = []
         angles = np.arange(-limit, limit + delta, delta)
         for angle in angles:
-            histogram, score = PreProcessing.determine_score(thresh, angle)
+            histogram, score = PreProcessing.determine_score(image, angle)
             scores.append(score)
 
         best_angle = angles[scores.index(max(scores))]
 
-        (h, w) = image.shape[:2]
+        h, w = image.shape[:2]
         center = (w // 2, h // 2)
         M = cv2.getRotationMatrix2D(center, best_angle, 1.0)
         rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
@@ -118,20 +98,72 @@ class PreProcessing:
         return rotated
 
     @staticmethod
-    def run(img):
-        preprocessor = PreProcessing()
-        # remove noise
-        img = preprocessor.noise_removal(img)
-        # resize
-        img = preprocessor.imageResize(img)
-        # convert to grayscale
-        img = preprocessor.bgrtogrey(img)
-        # threshold
-        img = preprocessor.threshold(img)
-        # correct skew
-        img = preprocessor.correct_skew(img)
+    def remove_table_borders(image, params=None):
+        image = image.copy()
+        thresh = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+        # Remove horizontal lines
+        horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (80, 2))
+        remove_horizontal = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, horizontal_kernel, iterations=2)
+        cnts = cv2.findContours(remove_horizontal, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+        for c in cnts:
+            cv2.drawContours(image, [c], -1, (255, 255, 255), 5)
 
-        return img
+        # Remove vertical lines
+        vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 80))
+        remove_vertical = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, vertical_kernel, iterations=2)
+        cnts = cv2.findContours(remove_vertical, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+        for c in cnts:
+            cv2.drawContours(image, [c], -1, (255, 255, 255), 5)
+
+        return image
+
+    def run(self):
+        img_clean = self.img
+        if self.config['preprocessors'] is None:
+            return self.img
+        for preprocessor in self.config['preprocessors']:
+            preprocessor_name = preprocessor['name']
+            preprocessor_params = preprocessor['params'] if len(preprocessor['params']) > 0 else None
+            img_clean = getattr(PreProcessing, preprocessor_name)(img_clean, preprocessor_params)
+            plt.imshow(img_clean)
+            plt.savefig('preprocess_{}.png'.format(preprocessor_name))
+
+        return img_clean
+
+    #
+    # def _run(self):
+    #     # remove noise
+    #     img = self.noise_removal()
+    #     plt.imshow(img)
+    #     plt.savefig('noise_removal.png')
+    #     # resize
+    #     # img = self.imageResize()
+    #     # plt.imshow(img)
+    #     # plt.savefig('image_resize.png')
+    #     # convert to grayscale
+    #     # img = preprocessor.bgrtogrey(self.img)
+    #     # plt.imshow(img, cmap='gray', vmin=0, vmax=255)
+    #     # plt.show()
+    #
+    #     # threshold
+    #     # img = preprocessor.threshold(self.img)
+    #     # plt.imshow(img, cmap='gray', vmin=0, vmax=255)
+    #     # plt.show()
+    #     # correct skew
+    #     img = self.correct_skew()
+    #     plt.imshow(img)
+    #     plt.savefig('correct_skew.png')
+    #
+    #     plt.show()
+    #
+    #     img = self.remove_table_borders()
+    #     plt.imshow(img)
+    #     plt.savefig('remove_table_borders.png')
+    #
+    #     plt.show()
+    #     return img
 
 
 if __name__ == '__main__':
@@ -139,6 +171,6 @@ if __name__ == '__main__':
     img = Image.open(path_to_image)
     print(img.size)
     preprocessor = PreProcessing()
-    img_resize = preprocessor.imageResize(np.asarray(img))
+    img_resize = preprocessor.image_resize(np.asarray(img))
     img_resize_pil = Image.fromarray(img_resize)
     print(img_resize_pil.size)

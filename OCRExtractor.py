@@ -1,10 +1,9 @@
 from pytesseract import pytesseract
 
 
-class OCRExtractor:
-    def __init__(self):
-        pass
-    @staticmethod
-    def extractinformation(img):
-        extractedInformation = pytesseract.image_to_string(img)
-        return extractedInformation
+class ExtractText:
+    def __init__(self, image):
+        self.img = image
+
+    def extractinformation(self):
+        return pytesseract.image_to_string(self.img)

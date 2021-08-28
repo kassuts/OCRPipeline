@@ -1,0 +1,12 @@
+{
+      "name": "default_preprocessor_and_extract",
+      "image_directory": "/Users/eitankassuto/PycharmProjects/OCRPipeline/test_images/test.png",
+      "preprocessors":
+              [{"name": "noise_removal",
+                "params": {}},
+               {"name": "correct_skew",
+                "params": {"delta": 1, "limit": 20}},
+               {"name": "image_resize",
+                "params": {}}]
+
+}
