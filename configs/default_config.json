@@ -1,6 +1,6 @@
 {
       "name": "default_preprocessor_and_extract",
-      "image_directory": "/Users/eitankassuto/PycharmProjects/OCRPipeline/test_images/test.png",
+      "image_directory": "/Users/eitankassuto/PycharmProjects/OCRPipeline/test_images",
       "preprocessors":
               [{"name": "noise_removal",
                 "params": {}},
