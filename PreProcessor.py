@@ -1,16 +1,13 @@
 import cv2
 import numpy as np
-from PIL import Image
 from scipy.ndimage import interpolation as inter
-import matplotlib.pyplot as plt
+
 
 class PreProcessing:
     def __init__(self, image, config):
         self.img = image
-        self.original_width, self.original_height = self.img.shape[:2]
         self.config = config
-        print("Original Width x Height of image is {width} x {height}".format(width=self.original_width,
-                                                                              height=self.original_height))
+
     @staticmethod
     def image_resize(image, params=None):
         """
@@ -96,7 +93,6 @@ class PreProcessing:
         center = (w // 2, h // 2)
         M = cv2.getRotationMatrix2D(center, best_angle, 1.0)
         rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-        print("The Rotation angle is: ", best_angle)
         return rotated
 
     def run(self):

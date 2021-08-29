@@ -7,10 +7,11 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-from main import PROJECT_DIRECTORY
+# from main import PROJECT_DIRECTORY
+PROJECT_DIRECTORY = os.path.abspath(os.getcwd())
 
 
-def read_json(filename):
+def read_json_file(filename):
     filename = Path(filename)
     with filename.open('rt') as handle:
         return json.load(handle, object_hook=OrderedDict)

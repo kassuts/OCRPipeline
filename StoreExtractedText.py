@@ -1,10 +1,8 @@
 import os
 from collections import OrderedDict
-from pathlib import Path
-
 import pandas as pd
 
-from main import PROJECT_DIRECTORY
+PROJECT_DIRECTORY = os.path.abspath(os.getcwd())
 
 
 class PostProcessAndStore:
@@ -26,6 +24,7 @@ class PostProcessAndStore:
         if not os.path.exists(storage_dataframe_path):
             return OrderedDict()
         storage_dataframe = pd.read_csv(storage_dataframe_path)
+        storage_dataframe = storage_dataframe.drop(columns=["Unnamed: 0"])
         storage_dict = storage_dataframe.to_dict("list")
         return storage_dict
 
