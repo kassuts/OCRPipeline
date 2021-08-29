@@ -107,6 +107,9 @@ class PreProcessing:
         for preprocessor in self.config['preprocessors']:
             preprocessor_name = preprocessor['name']
             preprocessor_params = preprocessor['params'] if len(preprocessor['params']) > 0 else None
-            img_clean = getattr(PreProcessing, preprocessor_name)(img_clean, preprocessor_params)
+            try:
+                img_clean = getattr(PreProcessing, preprocessor_name)(img_clean, preprocessor_params)
+            except AttributeError as e:
+                raise RuntimeError("Preprocessor given does not exist, please check config {}".format(e))
 
         return img_clean

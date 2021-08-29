@@ -1,0 +1,9 @@
+{
+      "name": "default_preprocessor_and_extract",
+      "image_directory": "test_images",
+      "storage_dataframe_path": "extracted_text.csv",
+      "preprocessors":
+              [{"name": "image_BLAH_BALH",
+                "params": {}}]
+
+}
