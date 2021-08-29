@@ -1,0 +1,9 @@
+numpy>=1.0.0
+pandas>=1.0.0
+opencv==3.4.2
+py-opencv==3.4.2
+python >= 3.6
+tesseract>=4.0.0
+pytesseract>=0.3.8
+scipy==1.6.2
+pillow >= 8.3.1
