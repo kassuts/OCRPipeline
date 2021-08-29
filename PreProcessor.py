@@ -9,7 +9,7 @@ class PreProcessing:
         self.img = image
         self.original_width, self.original_height = self.img.shape[:2]
         self.config = config
-        print("original Width x Height of image is {width} x {height}".format(width=self.original_width,
+        print("Original Width x Height of image is {width} x {height}".format(width=self.original_width,
                                                                               height=self.original_height))
     @staticmethod
     def image_resize(image, params=None):
@@ -19,8 +19,10 @@ class PreProcessing:
         :return:
         """
         params = {} if params is None else params
-
-        img_resized = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)  # Inter Cubic
+        fx = params.get("fx", 2)
+        fy = params.get("fy", 2)
+        interpolation_type = params.get('interpolation_type', cv2.INTER_CUBIC)
+        img_resized = cv2.resize(image, None, fx=fx, fy=fy, interpolation=interpolation_type)  # Inter Cubic
         return img_resized
 
     @staticmethod
@@ -105,21 +107,10 @@ class PreProcessing:
         img_clean = self.img
         if self.config['preprocessors'] is None:
             return self.img
+
         for preprocessor in self.config['preprocessors']:
             preprocessor_name = preprocessor['name']
             preprocessor_params = preprocessor['params'] if len(preprocessor['params']) > 0 else None
             img_clean = getattr(PreProcessing, preprocessor_name)(img_clean, preprocessor_params)
-            # plt.imshow(img_clean)
-            # plt.savefig('preprocess_{}.png'.format(preprocessor_name))
 
         return img_clean
-
-
-if __name__ == '__main__':
-    path_to_image = "/Users/eitankassuto/PycharmProjects/OCRPipeline/test.png"
-    img = Image.open(path_to_image)
-    print(img.size)
-    preprocessor = PreProcessing()
-    img_resize = preprocessor.image_resize(np.asarray(img))
-    img_resize_pil = Image.fromarray(img_resize)
-    print(img_resize_pil.size)

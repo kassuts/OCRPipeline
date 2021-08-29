@@ -1,6 +1,7 @@
 {
       "name": "default_preprocessor_and_extract",
-      "image_directory": "/Users/eitankassuto/PycharmProjects/OCRPipeline/test_images",
+      "image_directory": "test_images",
+      "storage_dataframe_path": "extracted_text.csv",
       "preprocessors":
               [{"name": "noise_removal",
                 "params": {}},

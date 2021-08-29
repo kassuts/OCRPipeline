@@ -4,7 +4,10 @@ from collections import OrderedDict
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from PIL import Image
+
+from main import PROJECT_DIRECTORY
 
 
 def read_json(filename):
@@ -15,8 +18,17 @@ def read_json(filename):
 
 def load_images_in_directory(config):
     directory = config.get('image_directory')
+    if directory is None:
+        raise Exception("Image directory not given")
+
+    directory = os.path.join(PROJECT_DIRECTORY, directory)
     image_dict = {}
     for filename in os.listdir(directory):
         filename_path = os.path.join(directory, filename)
         image_dict[filename_path] = np.asarray(Image.open(filename_path))
     return image_dict
+
+
+def remove_duplicates(df):
+    if isinstance(df, pd.DataFrame):
+        return df.drop_duplicates()
